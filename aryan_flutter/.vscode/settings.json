@@ -1,0 +1,5 @@
+{
+    "cmake.configureOnOpen": true,
+    "cmake.sourceDirectory": "D:/flutter_project/aryan_flutter/linux",
+    "java.configuration.updateBuildConfiguration": "interactive"
+}
