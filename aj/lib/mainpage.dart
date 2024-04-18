@@ -1,8 +1,8 @@
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:web_socket_channel/io.dart';
-import 'package:web_socket_channel/status.dart' as statusCodes;
+import 'dart:async';
 
 class MainPage extends StatefulWidget {
   @override
@@ -10,20 +10,33 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  late Future<Map<String, dynamic>> futureMatch;
+  late StreamController<Map<String, dynamic>> _streamController;
   late String team1Name;
   late String team2Name;
+  late Timer timer; // Timer variable declaration
+  int counter = 0; // Counter variable
 
   @override
   void initState() {
     super.initState();
-    futureMatch = fetchCricketMatch('89749');
+    _streamController = StreamController<Map<String, dynamic>>();
+    // Start the timer when the widget is initialized
+    timer = Timer.periodic(Duration(seconds: 10), (Timer t) => _fetchCricketMatch('91452'));
+    // Fetch match data immediately when the widget is initialized
+    _fetchCricketMatch('91452');
   }
 
-  Future<Map<String, dynamic>> fetchCricketMatch(String matchId) async {
-    final response =
-        await http.get(Uri.parse('http://192.168.1.47:5005/score?id=$matchId'));
+  @override
+  void dispose() {
+    // Cancel the timer and close the stream controller when the widget is disposed
+    timer.cancel();
+    _streamController.close();
+    super.dispose();
+  }
 
+  Future<void> _fetchCricketMatch(String matchId) async {
+    final response = await http.get(Uri.parse('http://192.168.1.8:5003/score?id=$matchId'));
+    print(1);
     if (response.statusCode == 200) {
       Map<String, dynamic> matchData = json.decode(response.body);
       // Extract team names
@@ -31,30 +44,12 @@ class _MainPageState extends State<MainPage> {
       var teamNames = titleParts[0].split(' vs ');
       team1Name = teamNames[0];
       team2Name = teamNames[1];
-      return matchData;
+
+      // Add match data to the stream
+      _streamController.add(matchData);
     } else {
       throw Exception('Failed to load cricket match');
     }
-  }
-
-  void fetchCricketMatchWebSocket(String matchId) {
-    final channel =
-        IOWebSocketChannel.connect('ws://192.168.1.47:5005/score?id=$matchId');
-
-    channel.stream.listen((message) {
-      setState(() {
-        Map<String, dynamic> matchData = json.decode(message);
-        // Extract team names
-        var titleParts = matchData['title'].split(', ');
-        var teamNames = titleParts[0].split(' vs ');
-        team1Name = teamNames[0];
-        team2Name = teamNames[1];
-      });
-    }, onError: (error) {
-      // Handle error
-    }, onDone: () {
-      channel.sink.close(statusCodes.goingAway);
-    });
   }
 
   @override
@@ -79,14 +74,14 @@ class _MainPageState extends State<MainPage> {
             child: Text(
               'Login',
               style: TextStyle(fontSize: 18, color: Colors.white),
-            ),
+            ),90823
           ),
         ],
       ),
       body: SingleChildScrollView(
         child: Center(
-          child: FutureBuilder<Map<String, dynamic>>(
-            future: futureMatch,
+          child: StreamBuilder<Map<String, dynamic>>(
+            stream: _streamController.stream,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return CircularProgressIndicator();
@@ -97,12 +92,21 @@ class _MainPageState extends State<MainPage> {
                 // Extract team names
                 var titleParts = matchData['title'].split(', ');
                 var teamNames = titleParts[0].split(' vs ');
+                print('aaditya');
+                print('$matchData');
                 team1Name = teamNames[0];
                 team2Name = teamNames[1];
-                String team1Asset =
-                    team1Name.replaceAll(' ', '') + '.png';
-                String team2Asset =
-                    team2Name.replaceAll(' ', '') + '.png';
+                var score = matchData['livescore'].split('/');a
+                List<String> parts = score;
+                String runs = parts[0];
+                String wkts = parts[1];
+                List<String> secondPartParts = wkts.split(' ');
+                String wickets=secondPartParts[0];
+                print('$wickets');
+
+                String team1Asset = team1Name.replaceAll(' ', '') + '.png';
+                String team2Asset = team2Name.replaceAll(' ', '') + '.png';
+                
 
                 return Padding(
                   padding: const EdgeInsets.all(8.0),
@@ -118,8 +122,7 @@ class _MainPageState extends State<MainPage> {
                               color: Colors.grey.withOpacity(0.5),
                               spreadRadius: 5,
                               blurRadius: 7,
-                              offset:
-                                  Offset(0, 3), // changes position of shadow
+                              offset: Offset(0, 3), // changes position of shadow
                             ),
                           ],
                         ),
@@ -129,8 +132,7 @@ class _MainPageState extends State<MainPage> {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Column(
                                     children: [
@@ -171,15 +173,17 @@ class _MainPageState extends State<MainPage> {
                               SizedBox(height: 20),
                               Text(
                                 matchData['update'] ?? 'Update Not Found',
-                                style: TextStyle(
-                                    fontSize: 18, color: Colors.black),
+                                style: TextStyle(fontSize: 18, color: Colors.black),
                               ),
                               SizedBox(height: 20),
                               Text(
-                                matchData['livescore'] ??
-                                    'Live Score Not Found',
-                                style: TextStyle(
-                                    fontSize: 18, color: Colors.black),
+                                matchData['livescore'] ?? 'Live Score Not Found',
+                                style: TextStyle(fontSize: 18, color: Colors.black),
+                              ),
+                              SizedBox(height: 20),
+                              Text(
+                                'Counter: $counter', // Display the counter value
+                                style: TextStyle(fontSize: 18, color: Colors.black),
                               ),
                             ],
                           ),
@@ -204,3 +208,6 @@ void main() {
     home: MainPage(),
   ));
 }
+
+
+
