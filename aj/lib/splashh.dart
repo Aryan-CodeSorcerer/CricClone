@@ -1,17 +1,17 @@
+import 'package:aj/login.dart';
 import 'package:aj/mainpage.dart';
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(MyApp());
-}
+
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Splash Screen Example',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.purple,
       ),
       home: const SplashScreen(), // Set SplashScreen as the home page
     );
@@ -34,7 +34,7 @@ class _SplashScreenState extends State<SplashScreen> {
       // After 3 seconds, navigate to the main page
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => MainPage()),
+        MaterialPageRoute(builder: (context) => Web_SignIn()),
       );
     });
   }
@@ -42,17 +42,17 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      backgroundColor: Colors.blue, // Set the background color
+      backgroundColor: Colors.purple, // Set the background color
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            FlutterLogo(
-              size: 100,
-            ),
+            // FlutterLogo(
+            //   size: 100,
+            // ),
             SizedBox(height: 20),
             Text(
-              'Welcome to My App',
+              'Cric Score',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 24,
@@ -60,7 +60,7 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
             ),
             SizedBox(height: 10),
-            CircularProgressIndicator(), // Show a loading indicator
+            CircularProgressIndicator(color: Colors.white,), // Show a loading indicator
           ],
         ),
       ),
@@ -81,3 +81,5 @@ class _SplashScreenState extends State<SplashScreen> {
 //     );
 //   }
 // }
+
+

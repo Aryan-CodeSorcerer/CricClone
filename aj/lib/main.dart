@@ -13,6 +13,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      //debugShowCheckedModeBanner: false,
       debugShowCheckedModeBanner: false,
       title: 'Sasta App',
       theme: ThemeData(
@@ -34,8 +35,9 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: SplashScreen()
+     home: SplashScreen()
       //home: Web_SignIn()
+     // home: MyApp(),
 
       // const MyHomePage(title: 'Flutter Demo Home Page'),
     );
