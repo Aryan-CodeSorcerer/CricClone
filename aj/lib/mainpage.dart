@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
+import 'package:vibration/vibration.dart'; 
 
 class MainPage extends StatefulWidget {
   @override
@@ -13,17 +14,22 @@ class _MainPageState extends State<MainPage> {
   late StreamController<Map<String, dynamic>> _streamController;
   late String team1Name;
   late String team2Name;
-  late Timer timer; // Timer variable declaration
+  late Timer timer; 
+  late Timer matchIdTimer;// Timer variable declaration
   int counter = 0; // Counter variable
+  String prevWickets = '0';
+  String currentMatchId = '91564';
 
   @override
   void initState() {
     super.initState();
     _streamController = StreamController<Map<String, dynamic>>();
     // Start the timer when the widget is initialized
-    timer = Timer.periodic(Duration(seconds: 10), (Timer t) => _fetchCricketMatch('91452'));
+    timer = Timer.periodic(Duration(seconds: 10), (Timer t) => _fetchCricketMatch(currentMatchId));
+    matchIdTimer = Timer.periodic(Duration(seconds: 100), (Timer t) => _updateMatchId());
+
     // Fetch match data immediately when the widget is initialized
-    _fetchCricketMatch('91452');
+    _fetchCricketMatch(currentMatchId);
   }
 
   @override
@@ -35,8 +41,8 @@ class _MainPageState extends State<MainPage> {
   }
 
   Future<void> _fetchCricketMatch(String matchId) async {
-    final response = await http.get(Uri.parse('http://192.168.1.8:5003/score?id=$matchId'));
-    print(1);
+    final response = await http.get(Uri.parse('http://192.168.1.47:5006/score?id=$matchId'));
+    // print('$matchId');
     if (response.statusCode == 200) {
       Map<String, dynamic> matchData = json.decode(response.body);
       // Extract team names
@@ -47,10 +53,47 @@ class _MainPageState extends State<MainPage> {
 
       // Add match data to the stream
       _streamController.add(matchData);
+      var score = matchData['livescore'].split('/');
+      List<String> parts = score;
+      String runs = parts[0];
+      String wkts = parts[1];
+      List<String> secondPartParts = wkts.split(' ');
+      List<String> firstPartParts = runs.split(' ');
+      String wickets = secondPartParts[0];
+      String run= firstPartParts[1];
+      print('$run');
+      if (int.parse(wickets) > int.parse(prevWickets)) {
+        print("vibrateeeeee wktttttt");
+        // if (await Vibration.hasVibrator()) { // Check if the device has a vibrator
+          Vibration.vibrate(); // Vibrate the phone
+        // }
+        prevWickets = wickets;
+      }
     } else {
       throw Exception('Failed to load cricket match');
     }
   }
+Future<void> _updateMatchId() async {
+  final response = await http.get(
+    Uri.parse('http://127.0.0.1:5005/current_match_id'), // Replace with the correct IP address
+  );
+  
+  if (response.statusCode == 200) {
+    final responseData = json.decode(response.body);
+    final currentMatchId = responseData['current_match_id'];
+    print('$currentMatchId');
+
+    print('Match ID updated successfully');
+    setState(() {
+      this.currentMatchId = currentMatchId;
+    });
+    _fetchCricketMatch(currentMatchId); // Fetch data from new matchId
+  } else {
+    print('Failed to update match ID: ${response.reasonPhrase}');
+  }
+}
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +117,7 @@ class _MainPageState extends State<MainPage> {
             child: Text(
               'Login',
               style: TextStyle(fontSize: 18, color: Colors.white),
-            ),90823
+            ),
           ),
         ],
       ),
@@ -92,17 +135,17 @@ class _MainPageState extends State<MainPage> {
                 // Extract team names
                 var titleParts = matchData['title'].split(', ');
                 var teamNames = titleParts[0].split(' vs ');
-                print('aaditya');
-                print('$matchData');
+                print('teamNames');
+                // print('$matchData');
                 team1Name = teamNames[0];
                 team2Name = teamNames[1];
-                var score = matchData['livescore'].split('/');a
+                var score = matchData['livescore'].split('/');
                 List<String> parts = score;
                 String runs = parts[0];
                 String wkts = parts[1];
                 List<String> secondPartParts = wkts.split(' ');
                 String wickets=secondPartParts[0];
-                print('$wickets');
+                // print('$wickets');
 
                 String team1Asset = team1Name.replaceAll(' ', '') + '.png';
                 String team2Asset = team2Name.replaceAll(' ', '') + '.png';
